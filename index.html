@@ -2,184 +2,230 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard PRO – Programa de Capacitación</title>
+<title>Dashboard PRO – Capacitación AGROVAL</title>
 
 <style>
-  body { font-family:'Segoe UI', Arial; background:#eef1f4; margin:0; padding:20px; }
-  h2 { color:#2d3e50; margin-bottom:20px; }
-  table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; margin-top:20px; display:block; max-height:75vh; overflow-y:auto; }
-  thead th { position: sticky; top: 0; background:#1f2d3d; color:white; z-index: 50; padding:10px; font-size:13px; }
-  td { padding:10px; border-bottom:1px solid #ddd; text-align:center; vertical-align:middle; cursor:pointer; }
-
-  .tag { padding:4px 8px; border-radius:10px; font-size:11px; font-weight:bold; color:#fff; }
-  .rojo { background:#dc3545; }
-  .amarillo { background:#ffc107; color:#000; }
-  .verde { background:#28a745; }
-
-  .fase-tag { padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; color:white; display:inline-block; }
-  .f1 { background:#dc3545; }
-  .f2 { background:#ffc107; color:#000; }
-  .f3 { background:#28a745; }
-
-  /* MODAL */
-  #modal {
-    position:fixed; top:0; left:0; width:100%; height:100%;
-    background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center;
-    padding:20px;
-  }
-  #modalContent {
-    background:white; width:80%; max-height:90vh; padding:20px; border-radius:12px;
-    overflow-y:auto;
-  }
-  #closeBtn {
-    float:right; cursor:pointer; font-size:20px; font-weight:bold;
+  body {
+    font-family: 'Segoe UI', Arial;
+    background: linear-gradient(135deg, #eef1f4, #dfe6ec);
+    margin: 0;
+    padding: 30px;
   }
 
-  .graf-container {
-    width:100%;
-    max-width:600px;
-    margin:auto;
-    margin-bottom:30px;
+  h2 {
+    color: #1f2d3d;
+    margin-bottom: 25px;
+    font-size: 28px;
+    font-weight: 700;
+    text-align: center;
   }
 
-  #exportBtn {
-    background:#28a745; color:white; padding:10px 16px; border:none; border-radius:6px;
-    cursor:pointer; margin-bottom:20px;
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.1);
   }
+
+  thead th {
+    background: #1f2d3d;
+    color: white;
+    padding: 12px;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e5e5;
+    text-align: center;
+    font-size: 14px;
+  }
+
+  tr:hover {
+    background: #f1f7ff;
+    cursor: pointer;
+  }
+
+  .tag {
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #fff;
+  }
+
+  .rojo { background: #dc3545; }
+  .amarillo { background: #ffc107; color: #000; }
+  .verde { background: #28a745; }
+
+  .fase-tag {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+  }
+
+  .f1 { background: #dc3545; }
+  .f2 { background: #ffc107; color: #000; }
+  .f3 { background: #28a745; }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-const DATA_TRABAJADORES = [
-  { nombre:"Michel Adriana Castro", merma:2, limpieza:70, calidad:90, resistencia:60, tecnica:75, cajas:34, inicio:"2026-03-31" },
-  { nombre:"María de los Ángeles Castillo Contreras", merma:3, limpieza:70, calidad:90, resistencia:50, tecnica:70, cajas:28, inicio:"2026-03-31" },
-  { nombre:"Felipe de Jesús Castillo Escalante", merma:4, limpieza:85, calidad:80, resistencia:50, tecnica:65, cajas:35, inicio:"2026-03-31" },
-  { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:75, calidad:90, resistencia:60, tecnica:75, cajas:30, inicio:"2026-04-03" },
-  { nombre:"Cesar Braulio Pereida Monroy", merma:5, limpieza:60, calidad:70, resistencia:60, tecnica:70, cajas:29, inicio:"2026-04-04" },
-  { nombre:"José Ángel González García", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2026-04-01" },
-  { nombre:"Santos Heriberto Cornelio Tapia", merma:6, limpieza:60, calidad:70, resistencia:50, tecnica:65, cajas:25, inicio:"2026-04-01" }
+/* ============================
+   DATOS (pueden repetirse)
+============================ */
+const DATA = [
+  { nombre:"Michel Adriana Castro", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2024-03-20" },
+  { nombre:"Michel Adriana Castro", merma:2, limpieza:70, calidad:90, resistencia:60, tecnica:75, cajas:34, inicio:"2024-03-31" },
+
+  { nombre:"María de los Ángeles Castillo Contreras", merma:3, limpieza:70, calidad:90, resistencia:50, tecnica:70, cajas:28, inicio:"2024-03-31" },
+
+  { nombre:"Felipe de Jesús Castillo Escalante", merma:4, limpieza:85, calidad:80, resistencia:50, tecnica:65, cajas:35, inicio:"2024-03-31" },
+
+  { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:75, calidad:90, resistencia:60, tecnica:75, cajas:30, inicio:"2024-04-03" },
+
+  { nombre:"Cesar Braulio Pereida Monroy", merma:5, limpieza:60, calidad:70, resistencia:60, tecnica:70, cajas:29, inicio:"2024-04-04" },
+
+  { nombre:"José Ángel González García", merma:6, limpieza:50, calidad:70, resistencia:30, tecnica:55, cajas:15, inicio:"2024-03-28" },
+  { nombre:"José Ángel González García", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2024-04-01" },
+
+  { nombre:"Santos Heriberto Cornelio Tapia", merma:6, limpieza:60, calidad:70, resistencia:50, tecnica:65, cajas:25, inicio:"2024-04-01" }
 ];
 
-function calcularAvance(inicio) {
-  const start = new Date(inicio);
-  const hoy = new Date("2026-04-06");
-  const diff = Math.floor((hoy - start) / (1000*60*60*24));
-  const avance = Math.min(Math.max(Math.round((diff/33)*100), 0), 100);
-  return { avance, dias: diff };
+/* ============================
+   AGRUPAR REPORTES POR PERSONA
+============================ */
+function agruparPorPersona() {
+  const map = {};
+  DATA.forEach(r => {
+    if (!map[r.nombre]) map[r.nombre] = [];
+    map[r.nombre].push(r);
+  });
+  return map;
 }
 
-function resumenPersona(c) {
-  let r = [];
-  if (c.limpieza >= 70) r.push("ordenada");
-  else r.push("limpieza aceptable");
-
-  if (c.calidad >= 80) r.push("buena calidad");
-  else r.push("calidad variable");
-
-  if (c.resistencia >= 60) r.push("resistencia adecuada");
-  else r.push("resistencia baja");
-
-  if (c.tecnica >= 70) r.push("técnica sólida");
-  else r.push("técnica en desarrollo");
-
-  if (c.merma > 5) r.push("merma alta");
-  else r.push("merma controlada");
-
-  return r.join(", ");
+/* ============================
+   CALCULAR DÍAS EN PROGRAMA
+============================ */
+function diasEnPrograma(fechaInicio) {
+  const start = new Date(fechaInicio);
+  const hoy = new Date();
+  return Math.floor((hoy - start) / (1000*60*60*24));
 }
 
-let chart1, chart2, chart3;
-
-function abrirPanel(i) {
-  const c = DATA_TRABAJADORES[i];
-  const { avance, dias } = calcularAvance(c.inicio);
-
-  document.getElementById("modal").style.display = "flex";
-  document.getElementById("modalTitle").innerText = c.nombre;
-  document.getElementById("modalInfo").innerHTML = `
-    <strong>Fase:</strong> ${dias <= 10 ? "F1" : dias <= 20 ? "F2" : "F3"}<br>
-    <strong>Avance:</strong> ${avance}%<br>
-    <strong>Días en programa:</strong> ${dias}<br>
-    <strong>Cajas promedio:</strong> ${c.cajas}<br>
-    <strong>Score:</strong> ${Math.round((c.limpieza+c.calidad+c.tecnica+c.resistencia)/4)}<br>
-    <strong>Resumen:</strong> ${resumenPersona(c)}
-  `;
-
-  if (chart1) chart1.destroy();
-  if (chart2) chart2.destroy();
-  if (chart3) chart3.destroy();
-
-  chart1 = new Chart(document.getElementById("graf1"), {
-    type:"bar",
-    data:{ labels:["Cajas"], datasets:[{ data:[c.cajas], backgroundColor:"#28a745" }] },
-    options:{ responsive:true, maintainAspectRatio:false }
-  });
-
-  chart2 = new Chart(document.getElementById("graf2"), {
-    type:"bar",
-    data:{ labels:["Limpieza","Calidad","Técnica","Resistencia"], datasets:[{ data:[c.limpieza,c.calidad,c.tecnica,c.resistencia], backgroundColor:"#007bff" }] },
-    options:{ responsive:true, maintainAspectRatio:false }
-  });
-
-  const tendencia = [
-    Math.round(c.limpieza * 0.8),
-    Math.round(c.calidad * 0.85),
-    Math.round(c.tecnica * 0.9),
-    Math.round(c.resistencia * 0.95),
-    c.limpieza
-  ];
-
-  chart3 = new Chart(document.getElementById("graf3"), {
-    type:"line",
-    data:{
-      labels:["Semana 1","Semana 2","Semana 3","Semana 4","Hoy"],
-      datasets:[{
-        label:"Tendencia de rendimiento",
-        data:tendencia,
-        borderColor:"#ff5733",
-        backgroundColor:"rgba(255,87,51,0.2)",
-        tension:0.3
-      }]
-    },
-    options:{ responsive:true, maintainAspectRatio:false }
-  });
+/* ============================
+   EVOLUCIÓN
+============================ */
+function evolucion(primer, ultimo) {
+  const calc = (a,b) => b - a;
+  return {
+    limpieza: calc(primer.limpieza, ultimo.limpieza),
+    calidad: calc(primer.calidad, ultimo.calidad),
+    tecnica: calc(primer.tecnica, ultimo.tecnica),
+    resistencia: calc(primer.resistencia, ultimo.resistencia),
+    merma: (primer.merma - ultimo.merma)
+  };
 }
 
-async function exportarPDF() {
+/* ============================
+   PERFIL RESUMIDO
+============================ */
+function resumenCorto(e) {
+  const opciones = [];
+
+  if (e.merma < 0) opciones.push({peso:3, txt:`⚠ Merma empeora (${e.merma}%)`});
+  if (e.merma > 0) opciones.push({peso:2, txt:`⚠ Merma mejora (+${e.merma}%)`});
+
+  if (e.tecnica < 0) opciones.push({peso:2, txt:`🛠 Técnica empeora (${e.tecnica}%)`});
+  if (e.tecnica > 0) opciones.push({peso:1, txt:`🛠 Técnica mejora (+${e.tecnica}%)`});
+
+  if (e.resistencia < 0) opciones.push({peso:2, txt:`💪 Resistencia baja (${e.resistencia}%)`});
+  if (e.resistencia > 0) opciones.push({peso:1, txt:`💪 Resistencia mejora (+${e.resistencia}%)`});
+
+  if (e.limpieza < 0) opciones.push({peso:1, txt:`🧽 Limpieza empeora (${e.limpieza}%)`});
+  if (e.limpieza > 0) opciones.push({peso:1, txt:`🧽 Limpieza mejora (+${e.limpieza}%)`});
+
+  if (e.calidad < 0) opciones.push({peso:1, txt:`🥚 Calidad empeora (${e.calidad}%)`});
+  if (e.calidad > 0) opciones.push({peso:1, txt:`🥚 Calidad mejora (+${e.calidad}%)`});
+
+  if (opciones.length === 0) return "✔ Estable";
+
+  opciones.sort((a,b)=>b.peso - a.peso);
+  return opciones[0].txt;
+}
+
+/* ============================
+   EXPORTAR PDF
+============================ */
+async function exportarPDF(nombre, primer, ultimo, evo) {
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p","mm","a4");
+  const pdf = new jsPDF();
 
-  const modal = document.getElementById("modalContent");
-  const canvas = await html2canvas(modal, { scale:2 });
-  const img = canvas.toDataURL("image/png");
+  pdf.setFontSize(18);
+  pdf.text(nombre, 10, 20);
 
-  pdf.addImage(img, "PNG", 5, 5, 200, 0);
-  pdf.save("reporte_casetero.pdf");
+  pdf.setFontSize(12);
+  pdf.text(`Primer reporte:`, 10, 40);
+  pdf.text(`Limpieza: ${primer.limpieza}%`, 10, 50);
+  pdf.text(`Calidad: ${primer.calidad}%`, 10, 60);
+  pdf.text(`Técnica: ${primer.tecnica}%`, 10, 70);
+  pdf.text(`Resistencia: ${primer.resistencia}%`, 10, 80);
+  pdf.text(`Merma: ${primer.merma}%`, 10, 90);
+
+  pdf.text(`Último reporte:`, 110, 40);
+  pdf.text(`Limpieza: ${ultimo.limpieza}%`, 110, 50);
+  pdf.text(`Calidad: ${ultimo.calidad}%`, 110, 60);
+  pdf.text(`Técnica: ${ultimo.tecnica}%`, 110, 70);
+  pdf.text(`Resistencia: ${ultimo.resistencia}%`, 110, 80);
+  pdf.text(`Merma: ${ultimo.merma}%`, 110, 90);
+
+  pdf.text(`Resumen: ${resumenCorto(evo)}`, 10, 120);
+
+  pdf.save(`Reporte_${nombre}.pdf`);
 }
 
-function cerrarModal() {
-  document.getElementById("modal").style.display = "none";
-}
-
+/* ============================
+   RENDER TABLA
+============================ */
 function render() {
   const tbody = document.getElementById("tbody");
-  DATA_TRABAJADORES.sort((a, b) => calcularAvance(b.inicio).avance - calcularAvance(a.inicio).avance);
   tbody.innerHTML = "";
-  DATA_TRABAJADORES.forEach((c,i)=>{
-    const { avance } = calcularAvance(c.inicio);
+
+  const personas = agruparPorPersona();
+
+  const lista = Object.keys(personas).map(nombre => {
+    const reportes = personas[nombre];
+    const primer = reportes[0];
+    const ultimo = reportes[reportes.length - 1];
+    const evo = evolucion(primer, ultimo);
+    const dias = diasEnPrograma(primer.inicio);
+
+    return { nombre, primer, ultimo, evo, dias };
+  });
+
+  // ORDENAR DE MÁS DÍAS A MENOS DÍAS
+  lista.sort((a,b)=> b.dias - a.dias);
+
+  lista.forEach((p,i)=>{
+    const avance = calcularAvance(p.ultimo.inicio);
+    const fase = avance < 30 ? "f1" : avance < 60 ? "f2" : "f3";
+
     tbody.innerHTML += `
-      <tr onclick="abrirPanel(${i})">
+      <tr onclick='exportarPDF("${p.nombre}", ${JSON.stringify(p.primer)}, ${JSON.stringify(p.ultimo)}, ${JSON.stringify(p.evo)})'>
         <td>${i+1}</td>
-        <td><strong>${c.nombre}</strong></td>
-        <td>⚠️ <span class="tag rojo">${c.merma}%</span></td>
-        <td>${barraAvance(avance)}</td>
-        <td>📦 ${c.cajas}</td>
-        <td>⭐ ${Math.round((c.limpieza+c.calidad+c.tecnica+c.resistencia)/4)}</td>
-        <td><span class="fase-tag">${avance < 30 ? "F1" : avance < 60 ? "F2" : "F3"}</span></td>
-        <td>${resumenPersona(c)}</td>
+        <td><strong>${p.nombre}</strong></td>
+        <td><span class="tag rojo">${p.ultimo.merma}%</span></td>
+        <td>${avance}%</td>
+        <td>📦 ${p.ultimo.cajas}</td>
+        <td>⭐ ${Math.round((p.ultimo.limpieza+p.ultimo.calidad+p.ultimo.tecnica+p.ultimo.resistencia)/4)}</td>
+        <td><span class="fase-tag ${fase}">${fase.toUpperCase()}</span></td>
+        <td>${resumenCorto(p.evo)}</td>
       </tr>
     `;
   });
@@ -199,43 +245,16 @@ window.onload = render;
     <tr>
       <th>#</th>
       <th>Casetero</th>
-      <th>⚠️ Merma</th>
-      <th>📊 Avance</th>
-      <th>📦 Inventario</th>
-      <th>⭐ Score</th>
-      <th>🏁 Fase</th>
-      <th>🔔 Perfil</th>
+      <th>Merma</th>
+      <th>Avance</th>
+      <th>Inventario</th>
+      <th>Score</th>
+      <th>Fase</th>
+      <th>Perfil / Evolución</th>
     </tr>
   </thead>
   <tbody id="tbody"></tbody>
 </table>
-
-<!-- MODAL -->
-<div id="modal">
-  <div id="modalContent">
-    <span id="closeBtn" onclick="cerrarModal()">✖</span>
-    <h3 id="modalTitle"></h3>
-    <p id="modalInfo"></p>
-
-    <button id="exportBtn" onclick="exportarPDF()">📄 Exportar PDF</button>
-
-    <div class="graf-container" style="height:250px;">
-      <h4>Cajas recolectadas</h4>
-      <canvas id="graf1"></canvas>
-    </div>
-
-    <div class="graf-container" style="height:250px;">
-      <h4>Rendimiento por habilidad</h4>
-      <canvas id="graf2"></canvas>
-    </div>
-
-    <div class="graf-container" style="height:250px;">
-      <h4>Tendencia de rendimiento</h4>
-      <canvas id="graf3"></canvas>
-    </div>
-
-  </div>
-</div>
 
 </body>
 </html>
