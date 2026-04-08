@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard PRO – Programa de Capacitación</title>
+
+<style>
+  body { font-family:'Segoe UI', Arial; background:#eef1f4; margin:0; padding:20px; }
+  h2 { color:#2d3e50; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; margin-top:20px; display:block; max-height:75vh; overflow-y:auto; }
+  thead th { position: sticky; top: 0; background:#1f2d3d; color:white; z-index: 50; padding:10px; font-size:13px; }
+  td { padding:10px; border-bottom:1px solid #ddd; text-align:center; vertical-align:middle; }
+  .tag { padding:4px 8px; border-radius:10px; font-size:11px; font-weight:bold; color:#fff; }
+  .rojo { background:#dc3545; }
+  .amarillo { background:#ffc107; color:#000; }
+  .verde { background:#28a745; }
+  .alerta-fase { background:#f8f9fa; padding:6px; border-radius:6px; margin:2px 0; border-left:4px solid #dc3545; font-size:11px; text-align:left; }
+  .fase-tag { padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; color:white; display:inline-block; }
+  .f1 { background:#dc3545; }
+  .f2 { background:#ffc107; color:#000; }
+  .f3 { background:#28a745; }
+  button { background:#1f2d3d; color:white; border:none; border-radius:6px; cursor:pointer; }
+  button:hover { background:#324a63; }
+</style>
+
+<script>
+const DATA_TRABAJADORES = [
+  { nombre:"Michel Adriana Castro", merma:2, limpieza:70, calidad:90, resistencia:60, tecnica:75, cajas:34, inicio:"2026-03-31" },
+  { nombre:"María de los Ángeles Castillo Contreras", merma:3, limpieza:70, calidad:90, resistencia:50, tecnica:70, cajas:28, inicio:"2026-03-31" },
+  { nombre:"Felipe de Jesús Castillo Escalante", merma:4, limpieza:85, calidad:80, resistencia:50, tecnica:65, cajas:35, inicio:"2026-03-31" },
+  { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:75, calidad:90, resistencia:60, tecnica:75, cajas:30, inicio:"2026-04-03" },
+  { nombre:"Cesar Braulio Pereida Monroy", merma:5, limpieza:60, calidad:70, resistencia:60, tecnica:70, cajas:29, inicio:"2026-04-04" }
+];
+
+function calcularAvance(inicio) {
+  const start = new Date(inicio);
+  const hoy = new Date("2026-04-06");
+  const diff = Math.floor((hoy - start) / (1000*60*60*24));
+  const avance = Math.min(Math.max(Math.round((diff/33)*100), 0), 100);
+  return { avance, dias: diff };
+}
+
+function barraAvance(p) {
+  let color = "#28a745"; if (p < 40) color = "#dc3545"; else if (p < 70) color = "#ffc107";
+  return `<div style="width:100%; background:#eee; border-radius:6px;">
+            <div style="width:${p}%; background:${color}; color:#000; padding:3px; border-radius:6px; font-size:11px; text-align:center; font-weight:bold;">
+              ${p}%
+            </div>
+          </div>`;
+}
+
+function miniGraficoInventario(cajas) {
+  const max = 45;
+  const bloques = Math.round((cajas / max) * 10);
+  const barra = "▮".repeat(bloques) + "▯".repeat(10 - bloques);
+  let color = "#28a745"; if (cajas < 20) color = "#dc3545"; else if (cajas < 30) color = "#ffc107";
+  return `<span style="color:${color}; font-size:14px; letter-spacing:1px;">${barra}</span>`;
+}
+
+function scoreFinal(l, c, t, r) { return Math.round((l + c + t + r) / 4); }
+
+function alertasPorFase(c) {
+  let a = [];
+  if (c.limpieza < 40) a.push("Limpieza crítica");
+  if (c.calidad < 60) a.push("Calidad inestable");
+  if (c.resistencia < 50) a.push("Resistencia baja");
+  if (c.merma > 5) a.push("Merma fuera de rango");
+  if (c.cajas < 15) a.push("Rendimiento bajo en cajas");
+  return a;
+}
+
+function obtenerFasePorDias(d) {
+  if (d <= 10) return { fase: "F1", clase: "f1" };
+  if (d <= 20) return { fase: "F2", clase: "f2" };
+  return { fase: "F3", clase: "f3" };
+}
+
+function resumenTrabajador(c, dias, score) {
+  return `
+    🧹 Limpieza: ${c.limpieza}%  
+    🥚 Calidad: ${c.calidad}%  
+    💪 Resistencia: ${c.resistencia}%  
+    📦 Cajas por día: ${c.cajas}  
+    🛠️ Técnica: ${c.tecnica}%  
+    ⭐ Score general: ${score}  
+    📅 Días en capacitación: ${dias}  
+  `;
+}
+
+let posicionActual = 0;
+
+function irA(pos) {
+  const filas = document.querySelectorAll("#tbody tr");
+  if (pos < 0 || pos >= filas.length) return;
+  posicionActual = pos;
+  filas[pos].scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function anteriorTrabajador() { irA(posicionActual - 1); }
+function siguienteTrabajador() { irA(posicionActual + 1); }
+
+function buscarTrabajador() {
+  const texto = document.getElementById("buscarInput").value.toLowerCase();
+  const filas = document.querySelectorAll("#tbody tr");
+  for (let i = 0; i < filas.length; i++) {
+    const nombre = filas[i].children[1].innerText.toLowerCase();
+    if (nombre.includes(texto)) {
+      posicionActual = i;
+      filas[i].scrollIntoView({ behavior: "smooth", block: "center" });
+      filas[i].style.background = "#d1ecf1";
+      setTimeout(() => filas[i].style.background = "", 1500);
+      break;
+    }
+  }
+}
+
+async function exportarPDF() {
+  const { jsPDF } = window.jspdf;
+  const tabla = document.querySelector("table");
+  const canvas = await html2canvas(tabla, { scale: 2, scrollY: -window.scrollY });
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF("p", "mm", "a4");
+  const imgWidth = 190;
+  const pageHeight = 295;
+  const imgHeight = canvas.height * imgWidth / canvas.width;
+  let heightLeft = imgHeight;
+  let position = 10;
+  pdf.addImage(imgData, "PNG", 10, position, imgWidth, imgHeight);
+  heightLeft -= pageHeight;
+  while (heightLeft > 0) {
+    pdf.addPage();
+    pdf.addImage(imgData, "PNG", 10, position - heightLeft, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+  }
+  pdf.save("reporte_capacitacion.pdf");
+}
+
+function render() {
+  const tbody = document.getElementById("tbody");
+  DATA_TRABAJADORES.sort((a, b) => calcularAvance(b.inicio).avance - calcularAvance(a.inicio).avance);
+  tbody.innerHTML = "";
+  DATA_TRABAJADORES.forEach((c,i)=>{
+    const { avance, dias } = calcularAvance(c.inicio);
+    const score = scoreFinal(c.limpieza,c.calidad,c.tecnica,c.resistencia);
+    const alertas = alertasPorFase(c);
+    const fase = obtenerFasePorDias(dias);
+    const resumen = resumenTrabajador(c, dias, score);
+    tbody.innerHTML += `
+      <tr>
+        <td>${i+1}</td>
+        <td><strong>${c.nombre}</strong></td>
+        <td>⚠️ <span class="tag rojo">${c.merma}%</span></td>
+        <td>${barraAvance(avance)}</td>
+        <td>${miniGraficoInventario(c.cajas)}</td>
+        <td>⭐ <strong>${score}</strong></td>
+        <td><span class="fase-tag ${fase.clase}">🏁 ${fase.fase}</span></td>
+        <td style="text-align:left; font-size:12px; white-space:pre-line;">${resumen}</td>
+        <td>${alertas.map(a=>`<div class="alerta-fase">🔔 ${a}</div>`).join("")}</td>
+      </tr>
+    `;
+  });
+}
+</script>
+
+</head>
+
+<body onload="render()">
+
+<h2>📊 Dashboard PRO – Programa de Capacitación</h2>
+
+<button onclick="exportarPDF()" style="padding:10px 16px; margin-bottom:15px; background:#28a745; color:white; border:none; border-radius:6px;">
+  📄 Exportar a PDF
+</button>
+
+<div style="margin-bottom:15px; display:flex; gap:10px;">
+  <button onclick="anteriorTrabajador()" style="padding:8px 14px;">⬆️ Anterior</button>
+  <button onclick="siguienteTrabajador()" style="padding:8px 14px;">⬇️ Siguiente</button>
+  <input id="buscarInput" type="text" placeholder="🔍 Buscar trabajador..." oninput="buscarTrabajador()" style="padding:8px; flex:1; border-radius:6px; border:1px solid #ccc;">
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Casetero</th>
+      <th>⚠️ Merma</th>
+      <th>📊 Avance</th>
+      <th>📦 Inventario</th>
+      <th>⭐ Score</th>
+      <th>🏁 Fase</th>
+      <th>📝 Resumen</th>
+      <th>🔔 Alertas</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</body>
+</html>
