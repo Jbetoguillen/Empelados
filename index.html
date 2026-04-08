@@ -120,6 +120,15 @@ function diasEnPrograma(fechaInicio) {
 }
 
 // ============================
+// FASE SEGÚN PROTOCOLO AGROVAL
+// ============================
+function faseSegunProtocolo(dias) {
+  if (dias <= 10) return "f1";     // Inducción
+  if (dias <= 20) return "f2";     // Desarrollo
+  return "f3";                     // Consolidación
+}
+
+// ============================
 // EVOLUCIÓN
 // ============================
 function evolucion(primer, ultimo) {
@@ -154,7 +163,8 @@ function resumenCorto(e) {
   if (e.calidad < 0) opciones.push({peso:1, txt:`🥚 Calidad empeora (${e.calidad}%)`});
   if (e.calidad > 0) opciones.push({peso:1, txt:`🥚 Calidad mejora (+${e.calidad}%)`});
 
-  if (opciones.length === 0) return "✔ Estable";
+  // SI NO HAY MEJORA NI EMPEORAMIENTO → NEGATIVO
+  if (opciones.length === 0) return "⚠ Rendimiento detenido";
 
   opciones.sort((a,b)=>b.peso - a.peso);
   return opciones[0].txt;
@@ -213,7 +223,7 @@ function render() {
 
   lista.forEach((p,i)=>{
     const avance = Math.round((p.dias / 33) * 100);
-    const fase = avance < 30 ? "f1" : avance < 60 ? "f2" : "f3";
+    const fase = faseSegunProtocolo(p.dias);
 
     tbody.innerHTML += `
       <tr onclick='exportarPDF("${p.nombre}", ${JSON.stringify(p.primer)}, ${JSON.stringify(p.ultimo)}, ${JSON.stringify(p.evo)})'>
