@@ -7,7 +7,7 @@
 <style>
   body {
     font-family: 'Segoe UI', Arial;
-    background: linear-gradient(135deg, #eef1f4, #dfe6ec);
+    background: #eef1f4;
     margin: 0;
     padding: 30px;
   }
@@ -34,7 +34,6 @@
     color: white;
     padding: 12px;
     font-size: 14px;
-    letter-spacing: 0.5px;
   }
 
   td {
@@ -58,9 +57,6 @@
   }
 
   .rojo { background: #dc3545; }
-  .amarillo { background: #ffc107; color: #000; }
-  .verde { background: #28a745; }
-
   .fase-tag {
     padding: 5px 10px;
     border-radius: 6px;
@@ -99,12 +95,6 @@ const DATA = [
 ];
 
 // ============================
-// FECHA DE CORTE DEL PROTOCOLO
-// ============================
-// Ajusta esta fecha al día de evaluación del protocolo (no al día actual real)
-const FECHA_CORTE = new Date("2024-04-06");
-
-// ============================
 // AGRUPAR REPORTES POR PERSONA
 // ============================
 function agruparPorPersona() {
@@ -117,13 +107,17 @@ function agruparPorPersona() {
 }
 
 // ============================
-// CALCULAR DÍAS EN PROGRAMA (0–33)
+// CALCULAR DÍAS DESDE FECHA DE INICIO
 // ============================
-function diasEnPrograma(fechaInicio) {
-  const start = new Date(fechaInicio);
-  let dias = Math.floor((FECHA_CORTE - start) / (1000*60*60*24));
+function diasDesdeInicio(fechaInicio) {
+  const inicio = new Date(fechaInicio);
+  const hoy = new Date(); // fecha real del navegador
+
+  let dias = Math.floor((hoy - inicio) / (1000*60*60*24));
+
   if (dias < 0) dias = 0;
   if (dias > 33) dias = 33;
+
   return dias;
 }
 
@@ -221,7 +215,7 @@ function render() {
     const primer = reportes[0];
     const ultimo = reportes[reportes.length - 1];
     const evo = evolucion(primer, ultimo);
-    const dias = diasEnPrograma(primer.inicio);
+    const dias = diasDesdeInicio(primer.inicio);
 
     return { nombre, primer, ultimo, evo, dias };
   });
