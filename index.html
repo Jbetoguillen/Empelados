@@ -57,6 +57,7 @@
   }
 
   .rojo { background: #dc3545; }
+
   .fase-tag {
     padding: 5px 10px;
     border-radius: 6px;
@@ -107,16 +108,14 @@ function agruparPorPersona() {
 }
 
 // ============================
-// CALCULAR DÍAS DESDE FECHA DE INICIO
+// DÍAS DESDE FECHA DE INICIO (SIN LÍMITES)
 // ============================
 function diasDesdeInicio(fechaInicio) {
   const inicio = new Date(fechaInicio);
   const hoy = new Date(); // fecha real del navegador
 
   let dias = Math.floor((hoy - inicio) / (1000*60*60*24));
-
   if (dias < 0) dias = 0;
-  if (dias > 33) dias = 33;
 
   return dias;
 }
