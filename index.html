@@ -10,11 +10,12 @@
   table { width:100%; border-collapse:collapse; background:#fff; border-radius:12px; margin-top:20px; display:block; max-height:75vh; overflow-y:auto; }
   thead th { position: sticky; top: 0; background:#1f2d3d; color:white; z-index: 50; padding:10px; font-size:13px; }
   td { padding:10px; border-bottom:1px solid #ddd; text-align:center; vertical-align:middle; cursor:pointer; }
+
   .tag { padding:4px 8px; border-radius:10px; font-size:11px; font-weight:bold; color:#fff; }
   .rojo { background:#dc3545; }
   .amarillo { background:#ffc107; color:#000; }
   .verde { background:#28a745; }
-  .alerta-fase { background:#f8f9fa; padding:6px; border-radius:6px; margin:2px 0; border-left:4px solid #dc3545; font-size:11px; text-align:left; }
+
   .fase-tag { padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; color:white; display:inline-block; }
   .f1 { background:#dc3545; }
   .f2 { background:#ffc107; color:#000; }
@@ -24,16 +25,32 @@
   #modal {
     position:fixed; top:0; left:0; width:100%; height:100%;
     background:rgba(0,0,0,0.6); display:none; justify-content:center; align-items:center;
+    padding:20px;
   }
   #modalContent {
-    background:white; width:70%; padding:20px; border-radius:12px;
+    background:white; width:80%; max-height:90vh; padding:20px; border-radius:12px;
+    overflow-y:auto;
   }
   #closeBtn {
     float:right; cursor:pointer; font-size:20px; font-weight:bold;
   }
+
+  .graf-container {
+    width:100%;
+    max-width:600px;
+    margin:auto;
+    margin-bottom:30px;
+  }
+
+  #exportBtn {
+    background:#28a745; color:white; padding:10px 16px; border:none; border-radius:6px;
+    cursor:pointer; margin-bottom:20px;
+  }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 const DATA_TRABAJADORES = [
@@ -54,54 +71,27 @@ function calcularAvance(inicio) {
   return { avance, dias: diff };
 }
 
-function barraAvance(p) {
-  let color = "#28a745"; if (p < 40) color = "#dc3545"; else if (p < 70) color = "#ffc107";
-  return `<div style="width:100%; background:#eee; border-radius:6px;">
-            <div style="width:${p}%; background:${color}; color:#000; padding:3px; border-radius:6px; font-size:11px; text-align:center; font-weight:bold;">
-              ${p}%
-            </div>
-          </div>`;
+function resumenPersona(c) {
+  let r = [];
+  if (c.limpieza >= 70) r.push("ordenada");
+  else r.push("limpieza aceptable");
+
+  if (c.calidad >= 80) r.push("buena calidad");
+  else r.push("calidad variable");
+
+  if (c.resistencia >= 60) r.push("resistencia adecuada");
+  else r.push("resistencia baja");
+
+  if (c.tecnica >= 70) r.push("técnica sólida");
+  else r.push("técnica en desarrollo");
+
+  if (c.merma > 5) r.push("merma alta");
+  else r.push("merma controlada");
+
+  return r.join(", ");
 }
 
-function miniGraficoInventario(cajas) {
-  const max = 45;
-  const bloques = Math.round((cajas / max) * 10);
-  const barra = "▮".repeat(bloques) + "▯".repeat(10 - bloques);
-  let color = "#28a745"; if (cajas < 20) color = "#dc3545"; else if (cajas < 30) color = "#ffc107";
-  return `<span style="color:${color}; font-size:14px; letter-spacing:1px;">${barra}</span>`;
-}
-
-function scoreFinal(l, c, t, r) { return Math.round((l + c + t + r) / 4); }
-
-function alertasPorFase(c) {
-  let a = [];
-  if (c.limpieza < 40) a.push("Limpieza crítica");
-  if (c.calidad < 60) a.push("Calidad inestable");
-  if (c.resistencia < 50) a.push("Resistencia baja");
-  if (c.merma > 5) a.push("Merma fuera de rango");
-  if (c.cajas < 15) a.push("Rendimiento bajo en cajas");
-  return a;
-}
-
-function obtenerFasePorDias(d) {
-  if (d <= 10) return { fase: "F1", clase: "f1" };
-  if (d <= 20) return { fase: "F2", clase: "f2" };
-  return { fase: "F3", clase: "f3" };
-}
-
-function resumenTrabajador(c, dias, score) {
-  return `
-    🧹 Limpieza: ${c.limpieza}%  
-    🥚 Calidad: ${c.calidad}%  
-    💪 Resistencia: ${c.resistencia}%  
-    📦 Cajas por día: ${c.cajas}  
-    🛠️ Técnica: ${c.tecnica}%  
-    ⭐ Score general: ${score}  
-    📅 Días en capacitación: ${dias}  
-  `;
-}
-
-let posicionActual = 0;
+let chart1, chart2, chart3;
 
 function abrirPanel(i) {
   const c = DATA_TRABAJADORES[i];
@@ -110,36 +100,68 @@ function abrirPanel(i) {
   document.getElementById("modal").style.display = "flex";
   document.getElementById("modalTitle").innerText = c.nombre;
   document.getElementById("modalInfo").innerHTML = `
+    <strong>Fase:</strong> ${dias <= 10 ? "F1" : dias <= 20 ? "F2" : "F3"}<br>
     <strong>Avance:</strong> ${avance}%<br>
     <strong>Días en programa:</strong> ${dias}<br>
     <strong>Cajas promedio:</strong> ${c.cajas}<br>
-    <strong>Score:</strong> ${scoreFinal(c.limpieza,c.calidad,c.tecnica,c.resistencia)}
+    <strong>Score:</strong> ${Math.round((c.limpieza+c.calidad+c.tecnica+c.resistencia)/4)}<br>
+    <strong>Resumen:</strong> ${resumenPersona(c)}
   `;
 
-  new Chart(document.getElementById("graf1"), {
+  if (chart1) chart1.destroy();
+  if (chart2) chart2.destroy();
+  if (chart3) chart3.destroy();
+
+  chart1 = new Chart(document.getElementById("graf1"), {
     type:"bar",
     data:{ labels:["Cajas"], datasets:[{ data:[c.cajas], backgroundColor:"#28a745" }] },
-    options:{ plugins:{ legend:{ display:false } } }
+    options:{ responsive:true, maintainAspectRatio:false }
   });
 
-  new Chart(document.getElementById("graf2"), {
+  chart2 = new Chart(document.getElementById("graf2"), {
     type:"bar",
     data:{ labels:["Limpieza","Calidad","Técnica","Resistencia"], datasets:[{ data:[c.limpieza,c.calidad,c.tecnica,c.resistencia], backgroundColor:"#007bff" }] },
-    options:{ plugins:{ legend:{ display:false } } }
+    options:{ responsive:true, maintainAspectRatio:false }
   });
 
-  new Chart(document.getElementById("graf3"), {
-    type:"bar",
-    data:{ labels:["Avance"], datasets:[{ data:[avance], backgroundColor:"#ffc107" }] },
-    options:{ plugins:{ legend:{ display:false } } }
+  const tendencia = [
+    Math.round(c.limpieza * 0.8),
+    Math.round(c.calidad * 0.85),
+    Math.round(c.tecnica * 0.9),
+    Math.round(c.resistencia * 0.95),
+    c.limpieza
+  ];
+
+  chart3 = new Chart(document.getElementById("graf3"), {
+    type:"line",
+    data:{
+      labels:["Semana 1","Semana 2","Semana 3","Semana 4","Hoy"],
+      datasets:[{
+        label:"Tendencia de rendimiento",
+        data:tendencia,
+        borderColor:"#ff5733",
+        backgroundColor:"rgba(255,87,51,0.2)",
+        tension:0.3
+      }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false }
   });
+}
+
+async function exportarPDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p","mm","a4");
+
+  const modal = document.getElementById("modalContent");
+  const canvas = await html2canvas(modal, { scale:2 });
+  const img = canvas.toDataURL("image/png");
+
+  pdf.addImage(img, "PNG", 5, 5, 200, 0);
+  pdf.save("reporte_casetero.pdf");
 }
 
 function cerrarModal() {
   document.getElementById("modal").style.display = "none";
-  document.getElementById("graf1").getContext("2d").clearRect(0,0,400,400);
-  document.getElementById("graf2").getContext("2d").clearRect(0,0,400,400);
-  document.getElementById("graf3").getContext("2d").clearRect(0,0,400,400);
 }
 
 function render() {
@@ -147,30 +169,23 @@ function render() {
   DATA_TRABAJADORES.sort((a, b) => calcularAvance(b.inicio).avance - calcularAvance(a.inicio).avance);
   tbody.innerHTML = "";
   DATA_TRABAJADORES.forEach((c,i)=>{
-    const { avance, dias } = calcularAvance(c.inicio);
-    const score = scoreFinal(c.limpieza,c.calidad,c.tecnica,c.resistencia);
-    const alertas = alertasPorFase(c);
-    const fase = obtenerFasePorDias(dias);
-    const resumen = resumenTrabajador(c, dias, score);
+    const { avance } = calcularAvance(c.inicio);
     tbody.innerHTML += `
       <tr onclick="abrirPanel(${i})">
         <td>${i+1}</td>
         <td><strong>${c.nombre}</strong></td>
         <td>⚠️ <span class="tag rojo">${c.merma}%</span></td>
         <td>${barraAvance(avance)}</td>
-        <td>${miniGraficoInventario(c.cajas)}</td>
-        <td>⭐ <strong>${score}</strong></td>
-        <td><span class="fase-tag ${fase.clase}">🏁 ${fase.fase}</span></td>
-        <td style="text-align:left; font-size:12px; white-space:pre-line;">${resumen}</td>
-        <td>${alertas.map(a=>`<div class="alerta-fase">🔔 ${a}</div>`).join("")}</td>
+        <td>📦 ${c.cajas}</td>
+        <td>⭐ ${Math.round((c.limpieza+c.calidad+c.tecnica+c.resistencia)/4)}</td>
+        <td><span class="fase-tag">${avance < 30 ? "F1" : avance < 60 ? "F2" : "F3"}</span></td>
+        <td>${resumenPersona(c)}</td>
       </tr>
     `;
   });
 }
 
-window.onload = function() {
-  render();
-};
+window.onload = render;
 </script>
 
 </head>
@@ -189,8 +204,7 @@ window.onload = function() {
       <th>📦 Inventario</th>
       <th>⭐ Score</th>
       <th>🏁 Fase</th>
-      <th>📝 Resumen</th>
-      <th>🔔 Alertas</th>
+      <th>🔔 Perfil</th>
     </tr>
   </thead>
   <tbody id="tbody"></tbody>
@@ -203,14 +217,23 @@ window.onload = function() {
     <h3 id="modalTitle"></h3>
     <p id="modalInfo"></p>
 
-    <h4>Cajas recolectadas</h4>
-    <canvas id="graf1"></canvas>
+    <button id="exportBtn" onclick="exportarPDF()">📄 Exportar PDF</button>
 
-    <h4>Rendimiento por habilidad</h4>
-    <canvas id="graf2"></canvas>
+    <div class="graf-container" style="height:250px;">
+      <h4>Cajas recolectadas</h4>
+      <canvas id="graf1"></canvas>
+    </div>
 
-    <h4>Avance del programa</h4>
-    <canvas id="graf3"></canvas>
+    <div class="graf-container" style="height:250px;">
+      <h4>Rendimiento por habilidad</h4>
+      <canvas id="graf2"></canvas>
+    </div>
+
+    <div class="graf-container" style="height:250px;">
+      <h4>Tendencia de rendimiento</h4>
+      <canvas id="graf3"></canvas>
+    </div>
+
   </div>
 </div>
 
