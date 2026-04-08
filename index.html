@@ -77,9 +77,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-/* ============================
-   DATOS (pueden repetirse)
-============================ */
+// ============================
+// DATOS (pueden repetirse)
+// ============================
 const DATA = [
   { nombre:"Michel Adriana Castro", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2024-03-20" },
   { nombre:"Michel Adriana Castro", merma:2, limpieza:70, calidad:90, resistencia:60, tecnica:75, cajas:34, inicio:"2024-03-31" },
@@ -98,9 +98,9 @@ const DATA = [
   { nombre:"Santos Heriberto Cornelio Tapia", merma:6, limpieza:60, calidad:70, resistencia:50, tecnica:65, cajas:25, inicio:"2024-04-01" }
 ];
 
-/* ============================
-   AGRUPAR REPORTES POR PERSONA
-============================ */
+// ============================
+// AGRUPAR REPORTES POR PERSONA
+// ============================
 function agruparPorPersona() {
   const map = {};
   DATA.forEach(r => {
@@ -110,18 +110,18 @@ function agruparPorPersona() {
   return map;
 }
 
-/* ============================
-   CALCULAR DÍAS EN PROGRAMA
-============================ */
+// ============================
+// CALCULAR DÍAS EN PROGRAMA
+// ============================
 function diasEnPrograma(fechaInicio) {
   const start = new Date(fechaInicio);
   const hoy = new Date();
   return Math.floor((hoy - start) / (1000*60*60*24));
 }
 
-/* ============================
-   EVOLUCIÓN
-============================ */
+// ============================
+// EVOLUCIÓN
+// ============================
 function evolucion(primer, ultimo) {
   const calc = (a,b) => b - a;
   return {
@@ -133,9 +133,9 @@ function evolucion(primer, ultimo) {
   };
 }
 
-/* ============================
-   PERFIL RESUMIDO
-============================ */
+// ============================
+// PERFIL RESUMIDO
+// ============================
 function resumenCorto(e) {
   const opciones = [];
 
@@ -160,9 +160,9 @@ function resumenCorto(e) {
   return opciones[0].txt;
 }
 
-/* ============================
-   EXPORTAR PDF
-============================ */
+// ============================
+// EXPORTAR PDF
+// ============================
 async function exportarPDF(nombre, primer, ultimo, evo) {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
@@ -190,9 +190,9 @@ async function exportarPDF(nombre, primer, ultimo, evo) {
   pdf.save(`Reporte_${nombre}.pdf`);
 }
 
-/* ============================
-   RENDER TABLA
-============================ */
+// ============================
+// RENDER TABLA
+// ============================
 function render() {
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
@@ -209,11 +209,10 @@ function render() {
     return { nombre, primer, ultimo, evo, dias };
   });
 
-  // ORDENAR DE MÁS DÍAS A MENOS DÍAS
   lista.sort((a,b)=> b.dias - a.dias);
 
   lista.forEach((p,i)=>{
-    const avance = calcularAvance(p.ultimo.inicio);
+    const avance = Math.round((p.dias / 33) * 100);
     const fase = avance < 30 ? "f1" : avance < 60 ? "f2" : "f3";
 
     tbody.innerHTML += `
