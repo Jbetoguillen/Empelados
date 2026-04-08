@@ -78,7 +78,7 @@
 
 <script>
 // ============================
-// DATOS (pueden repetirse)
+// DATOS
 // ============================
 const DATA = [
   { nombre:"Michel Adriana Castro", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2024-03-20" },
@@ -120,7 +120,7 @@ function diasEnPrograma(fechaInicio) {
 }
 
 // ============================
-// FASE SEGÚN PROTOCOLO AGROVAL
+// FASE SEGÚN PROTOCOLO
 // ============================
 function faseSegunProtocolo(dias) {
   if (dias <= 10) return "f1";     // Inducción
@@ -222,7 +222,6 @@ function render() {
   lista.sort((a,b)=> b.dias - a.dias);
 
   lista.forEach((p,i)=>{
-    const avance = Math.round((p.dias / 33) * 100);
     const fase = faseSegunProtocolo(p.dias);
 
     tbody.innerHTML += `
@@ -230,7 +229,7 @@ function render() {
         <td>${i+1}</td>
         <td><strong>${p.nombre}</strong></td>
         <td><span class="tag rojo">${p.ultimo.merma}%</span></td>
-        <td>${avance}%</td>
+        <td>${p.dias} días</td>
         <td>📦 ${p.ultimo.cajas}</td>
         <td>⭐ ${Math.round((p.ultimo.limpieza+p.ultimo.calidad+p.ultimo.tecnica+p.ultimo.resistencia)/4)}</td>
         <td><span class="fase-tag ${fase}">${fase.toUpperCase()}</span></td>
