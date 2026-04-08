@@ -23,13 +23,17 @@
   button:hover { background:#324a63; }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
 const DATA_TRABAJADORES = [
   { nombre:"Michel Adriana Castro", merma:2, limpieza:70, calidad:90, resistencia:60, tecnica:75, cajas:34, inicio:"2026-03-31" },
   { nombre:"María de los Ángeles Castillo Contreras", merma:3, limpieza:70, calidad:90, resistencia:50, tecnica:70, cajas:28, inicio:"2026-03-31" },
   { nombre:"Felipe de Jesús Castillo Escalante", merma:4, limpieza:85, calidad:80, resistencia:50, tecnica:65, cajas:35, inicio:"2026-03-31" },
   { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:75, calidad:90, resistencia:60, tecnica:75, cajas:30, inicio:"2026-04-03" },
-  { nombre:"Cesar Braulio Pereida Monroy", merma:5, limpieza:60, calidad:70, resistencia:60, tecnica:70, cajas:29, inicio:"2026-04-04" }
+  { nombre:"Cesar Braulio Pereida Monroy", merma:5, limpieza:60, calidad:70, resistencia:60, tecnica:70, cajas:29, inicio:"2026-04-04" },
+  { nombre:"José Ángel González García", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2026-04-01" },
+  { nombre:"Santos Heriberto Cornelio Tapia", merma:6, limpieza:60, calidad:70, resistencia:50, tecnica:65, cajas:25, inicio:"2026-04-01" }
 ];
 
 function calcularAvance(inicio) {
@@ -135,6 +139,31 @@ async function exportarPDF() {
   pdf.save("reporte_capacitacion.pdf");
 }
 
+function generarGraficas() {
+  const nombres = DATA_TRABAJADORES.map(t => t.nombre);
+  const cajas = DATA_TRABAJADORES.map(t => t.cajas);
+  const calidad = DATA_TRABAJADORES.map(t => t.calidad);
+  const limpieza = DATA_TRABAJADORES.map(t => t.limpieza);
+
+  new Chart(document.getElementById("grafCajas"), {
+    type: "bar",
+    data: { labels: nombres, datasets: [{ label: "Cajas", data: cajas, backgroundColor: "#28a745" }] },
+    options: { responsive: true, plugins:{ legend:{ display:false } } }
+  });
+
+  new Chart(document.getElementById("grafCalidad"), {
+    type: "bar",
+    data: { labels: nombres, datasets: [{ label: "Calidad", data: calidad, backgroundColor: "#007bff" }] },
+    options: { responsive: true, plugins:{ legend:{ display:false } } }
+  });
+
+  new Chart(document.getElementById("grafLimpieza"), {
+    type: "bar",
+    data: { labels: nombres, datasets: [{ label: "Limpieza", data: limpieza, backgroundColor: "#ffc107" }] },
+    options: { responsive: true, plugins:{ legend:{ display:false } } }
+  });
+}
+
 function render() {
   const tbody = document.getElementById("tbody");
   DATA_TRABAJADORES.sort((a, b) => calcularAvance(b.inicio).avance - calcularAvance(a.inicio).avance);
@@ -160,13 +189,35 @@ function render() {
     `;
   });
 }
+
+window.onload = function() {
+  render();
+  generarGraficas();
+};
 </script>
 
 </head>
 
-<body onload="render()">
+<body>
 
 <h2>📊 Dashboard PRO – Programa de Capacitación</h2>
+
+<div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:25px;">
+  <div style="width:32%; min-width:280px; background:white; padding:15px; border-radius:12px;">
+    <h3 style="margin:0 0 10px 0; font-size:16px;">📦 Cajas por día</h3>
+    <canvas id="grafCajas"></canvas>
+  </div>
+
+  <div style="width:32%; min-width:280px; background:white; padding:15px; border-radius:12px;">
+    <h3 style="margin:0 0 10px 0; font-size:16px;">🥚 Calidad</h3>
+    <canvas id="grafCalidad"></canvas>
+  </div>
+
+  <div style="width:32%; min-width:280px; background:white; padding:15px; border-radius:12px;">
+    <h3 style="margin:0 0 10px 0; font-size:16px;">🧹 Limpieza</h3>
+    <canvas id="grafLimpieza"></canvas>
+  </div>
+</div>
 
 <button onclick="exportarPDF()" style="padding:10px 16px; margin-bottom:15px; background:#28a745; color:white; border:none; border-radius:6px;">
   📄 Exportar a PDF
