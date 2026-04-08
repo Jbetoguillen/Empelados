@@ -99,6 +99,12 @@ const DATA = [
 ];
 
 // ============================
+// FECHA DE CORTE DEL PROTOCOLO
+// ============================
+// Ajusta esta fecha al día de evaluación del protocolo (no al día actual real)
+const FECHA_CORTE = new Date("2024-04-06");
+
+// ============================
 // AGRUPAR REPORTES POR PERSONA
 // ============================
 function agruparPorPersona() {
@@ -111,12 +117,14 @@ function agruparPorPersona() {
 }
 
 // ============================
-// CALCULAR DÍAS EN PROGRAMA
+// CALCULAR DÍAS EN PROGRAMA (0–33)
 // ============================
 function diasEnPrograma(fechaInicio) {
   const start = new Date(fechaInicio);
-  const hoy = new Date();
-  return Math.floor((hoy - start) / (1000*60*60*24));
+  let dias = Math.floor((FECHA_CORTE - start) / (1000*60*60*24));
+  if (dias < 0) dias = 0;
+  if (dias > 33) dias = 33;
+  return dias;
 }
 
 // ============================
@@ -163,7 +171,6 @@ function resumenCorto(e) {
   if (e.calidad < 0) opciones.push({peso:1, txt:`🥚 Calidad empeora (${e.calidad}%)`});
   if (e.calidad > 0) opciones.push({peso:1, txt:`🥚 Calidad mejora (+${e.calidad}%)`});
 
-  // SI NO HAY MEJORA NI EMPEORAMIENTO → NEGATIVO
   if (opciones.length === 0) return "⚠ Rendimiento detenido";
 
   opciones.sort((a,b)=>b.peso - a.peso);
@@ -219,6 +226,7 @@ function render() {
     return { nombre, primer, ultimo, evo, dias };
   });
 
+  // Ordenar de más días a menos días
   lista.sort((a,b)=> b.dias - a.dias);
 
   lista.forEach((p,i)=>{
