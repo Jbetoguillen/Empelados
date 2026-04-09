@@ -98,7 +98,7 @@
       <th>Inventario</th>
       <th>Score</th>
       <th>Fase</th>
-      <th>Inicio</th>
+      <th>Comentario</th>
     </tr>
   </thead>
   <tbody id="tbody"></tbody>
@@ -111,7 +111,7 @@
 
 <script>
 // ============================
-// DATOS CON FECHAS 2026
+// DATOS 2026
 // ============================
 const DATA = [
   { nombre:"Michel Adriana Castro", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2026-03-20" },
@@ -149,11 +149,8 @@ function agruparPorPersona() {
 function diasDesdeInicio(fechaInicio) {
   const inicio = new Date(fechaInicio);
   const hoy = new Date();
-
   let dias = Math.floor((hoy - inicio) / (1000*60*60*24));
-  if (dias < 0) dias = 0;
-
-  return dias;
+  return dias < 0 ? 0 : dias;
 }
 
 // ============================
@@ -175,21 +172,41 @@ function colorAvance(dias) {
 }
 
 // ============================
+// COMENTARIO AUTOMÁTICO
+// ============================
+function comentario(primer, ultimo, nombre) {
+
+  if (nombre.includes("María de los Ángeles")) return "BAJA";
+
+  let mejoras = 0;
+  let empeoras = 0;
+
+  if (ultimo.limpieza > primer.limpieza) mejoras++; else if (ultimo.limpieza < primer.limpieza) empeoras++;
+  if (ultimo.calidad > primer.calidad) mejoras++; else if (ultimo.calidad < primer.calidad) empeoras++;
+  if (ultimo.tecnica > primer.tecnica) mejoras++; else if (ultimo.tecnica < primer.tecnica) empeoras++;
+  if (ultimo.resistencia > primer.resistencia) mejoras++; else if (ultimo.resistencia < primer.resistencia) empeoras++;
+  if (ultimo.merma < primer.merma) mejoras++; else if (ultimo.merma > primer.merma) empeoras++;
+
+  if (mejoras > empeoras) return "Comentario positivo";
+  if (empeoras > mejoras) return "Comentario negativo";
+  return "Rendimiento detenido";
+}
+
+// ============================
 // GRÁFICA
 // ============================
 let chart;
 
 function mostrarGrafica(nombre, primer, ultimo) {
+
+  if (nombre.includes("María de los Ángeles")) return;
+
   document.getElementById("graficaBox").style.display = "block";
   document.getElementById("tituloGrafica").innerText = "Evolución de " + nombre;
 
   const labels = ["Limpieza", "Calidad", "Técnica", "Resistencia", "Merma"];
-  const primerData = [
-    primer.limpieza, primer.calidad, primer.tecnica, primer.resistencia, primer.merma
-  ];
-  const ultimoData = [
-    ultimo.limpieza, ultimo.calidad, ultimo.tecnica, ultimo.resistencia, ultimo.merma
-  ];
+  const primerData = [primer.limpieza, primer.calidad, primer.tecnica, primer.resistencia, primer.merma];
+  const ultimoData = [ultimo.limpieza, ultimo.calidad, ultimo.tecnica, ultimo.resistencia, ultimo.merma];
 
   if (chart) chart.destroy();
 
@@ -198,24 +215,11 @@ function mostrarGrafica(nombre, primer, ultimo) {
     data: {
       labels: labels,
       datasets: [
-        {
-          label: "Primer reporte",
-          backgroundColor: "#1f77b4",
-          data: primerData
-        },
-        {
-          label: "Último reporte",
-          backgroundColor: "#ff7f0e",
-          data: ultimoData
-        }
+        { label: "Primer reporte", backgroundColor: "#1f77b4", data: primerData },
+        { label: "Último reporte", backgroundColor: "#ff7f0e", data: ultimoData }
       ]
     },
-    options: {
-      responsive: true,
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
+    options: { responsive: true, scales: { y: { beginAtZero: true } } }
   });
 }
 
@@ -236,6 +240,7 @@ function render() {
     const dias = diasDesdeInicio(primer.inicio);
     const fase = faseSegunProtocolo(dias);
     const color = colorAvance(dias);
+    const coment = comentario(primer, ultimo, nombre);
 
     tbody.innerHTML += `
       <tr onclick='mostrarGrafica("${nombre}", ${JSON.stringify(primer)}, ${JSON.stringify(ultimo)})'>
@@ -245,7 +250,7 @@ function render() {
         <td>📦 ${ultimo.cajas}</td>
         <td>⭐ ${Math.round((ultimo.limpieza+ultimo.calidad+ultimo.tecnica+ultimo.resistencia)/4)}</td>
         <td><span class="fase-tag ${fase}">${fase.toUpperCase()}</span></td>
-        <td>${primer.inicio}</td>
+        <td>${coment}</td>
       </tr>
     `;
   });
