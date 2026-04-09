@@ -4,10 +4,12 @@
 <meta charset="UTF-8">
 <title>Dashboard PRO – Capacitación AGROVAL</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
   body {
     font-family: 'Segoe UI', Arial;
-    background: linear-gradient(135deg, #eef1f4, #dfe6ec);
+    background: #eef1f4;
     margin: 0;
     padding: 30px;
   }
@@ -34,7 +36,6 @@
     color: white;
     padding: 12px;
     font-size: 14px;
-    letter-spacing: 0.5px;
   }
 
   td {
@@ -49,12 +50,11 @@
     cursor: pointer;
   }
 
-  .tag {
-    padding: 4px 8px;
-    border-radius: 10px;
-    font-size: 11px;
+  .avance {
     font-weight: bold;
-    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: white;
   }
 
   .rojo { background: #dc3545; }
@@ -72,30 +72,63 @@
   .f1 { background: #dc3545; }
   .f2 { background: #ffc107; color: #000; }
   .f3 { background: #28a745; }
+
+  #graficaBox {
+    margin-top: 40px;
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+    display: none;
+  }
 </style>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+
+<h2>📊 Dashboard PRO – Programa de Capacitación</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Casetero</th>
+      <th>Avance</th>
+      <th>Inventario</th>
+      <th>Score</th>
+      <th>Fase</th>
+      <th>Inicio</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<div id="graficaBox">
+  <h3 id="tituloGrafica"></h3>
+  <canvas id="grafica"></canvas>
+</div>
 
 <script>
 // ============================
-// DATOS (pueden repetirse)
+// DATOS CON FECHAS 2026
 // ============================
 const DATA = [
-  { nombre:"Michel Adriana Castro", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2024-03-20" },
-  { nombre:"Michel Adriana Castro", merma:2, limpieza:70, calidad:90, resistencia:60, tecnica:75, cajas:34, inicio:"2024-03-31" },
+  { nombre:"Michel Adriana Castro", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2026-03-20" },
+  { nombre:"Michel Adriana Castro", merma:2, limpieza:70, calidad:90, resistencia:60, tecnica:75, cajas:34, inicio:"2026-03-31" },
 
-  { nombre:"María de los Ángeles Castillo Contreras", merma:3, limpieza:70, calidad:90, resistencia:50, tecnica:70, cajas:28, inicio:"2024-03-31" },
+  { nombre:"María de los Ángeles Castillo Contreras", merma:3, limpieza:70, calidad:90, resistencia:50, tecnica:70, cajas:28, inicio:"2026-03-31" },
 
-  { nombre:"Felipe de Jesús Castillo Escalante", merma:4, limpieza:85, calidad:80, resistencia:50, tecnica:65, cajas:35, inicio:"2024-03-31" },
+  { nombre:"Felipe de Jesús Castillo Escalante", merma:4, limpieza:85, calidad:80, resistencia:50, tecnica:65, cajas:35, inicio:"2026-03-31" },
 
-  { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:75, calidad:90, resistencia:60, tecnica:75, cajas:30, inicio:"2024-04-03" },
+  { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:75, calidad:90, resistencia:60, tecnica:75, cajas:30, inicio:"2026-04-03" },
 
-  { nombre:"Cesar Braulio Pereida Monroy", merma:5, limpieza:60, calidad:70, resistencia:60, tecnica:70, cajas:29, inicio:"2024-04-04" },
+  { nombre:"Cesar Braulio Pereida Monroy", merma:5, limpieza:60, calidad:70, resistencia:60, tecnica:70, cajas:29, inicio:"2026-04-04" },
 
-  { nombre:"José Ángel González García", merma:6, limpieza:50, calidad:70, resistencia:30, tecnica:55, cajas:15, inicio:"2024-03-28" },
-  { nombre:"José Ángel González García", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2024-04-01" },
+  { nombre:"José Ángel González García", merma:6, limpieza:50, calidad:70, resistencia:30, tecnica:55, cajas:15, inicio:"2026-03-28" },
+  { nombre:"José Ángel González García", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2026-04-01" },
 
-  { nombre:"Santos Heriberto Cornelio Tapia", merma:6, limpieza:60, calidad:70, resistencia:50, tecnica:65, cajas:25, inicio:"2024-04-01" }
+  { nombre:"Santos Heriberto Cornelio Tapia", merma:6, limpieza:60, calidad:70, resistencia:50, tecnica:65, cajas:25, inicio:"2026-04-01" }
 ];
 
 // ============================
@@ -111,97 +144,83 @@ function agruparPorPersona() {
 }
 
 // ============================
-// CALCULAR DÍAS EN PROGRAMA
+// DÍAS DESDE FECHA REAL
 // ============================
-function diasEnPrograma(fechaInicio) {
-  const start = new Date(fechaInicio);
+function diasDesdeInicio(fechaInicio) {
+  const inicio = new Date(fechaInicio);
   const hoy = new Date();
-  return Math.floor((hoy - start) / (1000*60*60*24));
+
+  let dias = Math.floor((hoy - inicio) / (1000*60*60*24));
+  if (dias < 0) dias = 0;
+
+  return dias;
 }
 
 // ============================
-// FASE SEGÚN PROTOCOLO AGROVAL
+// FASE
 // ============================
 function faseSegunProtocolo(dias) {
-  if (dias <= 10) return "f1";     // Inducción
-  if (dias <= 20) return "f2";     // Desarrollo
-  return "f3";                     // Consolidación
+  if (dias <= 10) return "f1";
+  if (dias <= 20) return "f2";
+  return "f3";
 }
 
 // ============================
-// EVOLUCIÓN
+// COLOR SEGÚN AVANCE
 // ============================
-function evolucion(primer, ultimo) {
-  const calc = (a,b) => b - a;
-  return {
-    limpieza: calc(primer.limpieza, ultimo.limpieza),
-    calidad: calc(primer.calidad, ultimo.calidad),
-    tecnica: calc(primer.tecnica, ultimo.tecnica),
-    resistencia: calc(primer.resistencia, ultimo.resistencia),
-    merma: (primer.merma - ultimo.merma)
-  };
+function colorAvance(dias) {
+  if (dias <= 10) return "rojo";
+  if (dias <= 20) return "amarillo";
+  return "verde";
 }
 
 // ============================
-// PERFIL RESUMIDO
+// GRÁFICA
 // ============================
-function resumenCorto(e) {
-  const opciones = [];
+let chart;
 
-  if (e.merma < 0) opciones.push({peso:3, txt:`⚠ Merma empeora (${e.merma}%)`});
-  if (e.merma > 0) opciones.push({peso:2, txt:`⚠ Merma mejora (+${e.merma}%)`});
+function mostrarGrafica(nombre, primer, ultimo) {
+  document.getElementById("graficaBox").style.display = "block";
+  document.getElementById("tituloGrafica").innerText = "Evolución de " + nombre;
 
-  if (e.tecnica < 0) opciones.push({peso:2, txt:`🛠 Técnica empeora (${e.tecnica}%)`});
-  if (e.tecnica > 0) opciones.push({peso:1, txt:`🛠 Técnica mejora (+${e.tecnica}%)`});
+  const labels = ["Limpieza", "Calidad", "Técnica", "Resistencia", "Merma"];
+  const primerData = [
+    primer.limpieza, primer.calidad, primer.tecnica, primer.resistencia, primer.merma
+  ];
+  const ultimoData = [
+    ultimo.limpieza, ultimo.calidad, ultimo.tecnica, ultimo.resistencia, ultimo.merma
+  ];
 
-  if (e.resistencia < 0) opciones.push({peso:2, txt:`💪 Resistencia baja (${e.resistencia}%)`});
-  if (e.resistencia > 0) opciones.push({peso:1, txt:`💪 Resistencia mejora (+${e.resistencia}%)`});
+  if (chart) chart.destroy();
 
-  if (e.limpieza < 0) opciones.push({peso:1, txt:`🧽 Limpieza empeora (${e.limpieza}%)`});
-  if (e.limpieza > 0) opciones.push({peso:1, txt:`🧽 Limpieza mejora (+${e.limpieza}%)`});
-
-  if (e.calidad < 0) opciones.push({peso:1, txt:`🥚 Calidad empeora (${e.calidad}%)`});
-  if (e.calidad > 0) opciones.push({peso:1, txt:`🥚 Calidad mejora (+${e.calidad}%)`});
-
-  // SI NO HAY MEJORA NI EMPEORAMIENTO → NEGATIVO
-  if (opciones.length === 0) return "⚠ Rendimiento detenido";
-
-  opciones.sort((a,b)=>b.peso - a.peso);
-  return opciones[0].txt;
+  chart = new Chart(document.getElementById("grafica"), {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Primer reporte",
+          backgroundColor: "#1f77b4",
+          data: primerData
+        },
+        {
+          label: "Último reporte",
+          backgroundColor: "#ff7f0e",
+          data: ultimoData
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { beginAtZero: true }
+      }
+    }
+  });
 }
 
 // ============================
-// EXPORTAR PDF
-// ============================
-async function exportarPDF(nombre, primer, ultimo, evo) {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-
-  pdf.setFontSize(18);
-  pdf.text(nombre, 10, 20);
-
-  pdf.setFontSize(12);
-  pdf.text(`Primer reporte:`, 10, 40);
-  pdf.text(`Limpieza: ${primer.limpieza}%`, 10, 50);
-  pdf.text(`Calidad: ${primer.calidad}%`, 10, 60);
-  pdf.text(`Técnica: ${primer.tecnica}%`, 10, 70);
-  pdf.text(`Resistencia: ${primer.resistencia}%`, 10, 80);
-  pdf.text(`Merma: ${primer.merma}%`, 10, 90);
-
-  pdf.text(`Último reporte:`, 110, 40);
-  pdf.text(`Limpieza: ${ultimo.limpieza}%`, 110, 50);
-  pdf.text(`Calidad: ${ultimo.calidad}%`, 110, 60);
-  pdf.text(`Técnica: ${ultimo.tecnica}%`, 110, 70);
-  pdf.text(`Resistencia: ${ultimo.resistencia}%`, 110, 80);
-  pdf.text(`Merma: ${ultimo.merma}%`, 110, 90);
-
-  pdf.text(`Resumen: ${resumenCorto(evo)}`, 10, 120);
-
-  pdf.save(`Reporte_${nombre}.pdf`);
-}
-
-// ============================
-// RENDER TABLA
+// RENDER
 // ============================
 function render() {
   const tbody = document.getElementById("tbody");
@@ -209,32 +228,24 @@ function render() {
 
   const personas = agruparPorPersona();
 
-  const lista = Object.keys(personas).map(nombre => {
+  Object.keys(personas).forEach((nombre, i) => {
     const reportes = personas[nombre];
     const primer = reportes[0];
     const ultimo = reportes[reportes.length - 1];
-    const evo = evolucion(primer, ultimo);
-    const dias = diasEnPrograma(primer.inicio);
 
-    return { nombre, primer, ultimo, evo, dias };
-  });
-
-  lista.sort((a,b)=> b.dias - a.dias);
-
-  lista.forEach((p,i)=>{
-    const avance = Math.round((p.dias / 33) * 100);
-    const fase = faseSegunProtocolo(p.dias);
+    const dias = diasDesdeInicio(primer.inicio);
+    const fase = faseSegunProtocolo(dias);
+    const color = colorAvance(dias);
 
     tbody.innerHTML += `
-      <tr onclick='exportarPDF("${p.nombre}", ${JSON.stringify(p.primer)}, ${JSON.stringify(p.ultimo)}, ${JSON.stringify(p.evo)})'>
+      <tr onclick='mostrarGrafica("${nombre}", ${JSON.stringify(primer)}, ${JSON.stringify(ultimo)})'>
         <td>${i+1}</td>
-        <td><strong>${p.nombre}</strong></td>
-        <td><span class="tag rojo">${p.ultimo.merma}%</span></td>
-        <td>${avance}%</td>
-        <td>📦 ${p.ultimo.cajas}</td>
-        <td>⭐ ${Math.round((p.ultimo.limpieza+p.ultimo.calidad+p.ultimo.tecnica+p.ultimo.resistencia)/4)}</td>
+        <td><strong>${nombre}</strong></td>
+        <td><span class="avance ${color}">${dias} días</span></td>
+        <td>📦 ${ultimo.cajas}</td>
+        <td>⭐ ${Math.round((ultimo.limpieza+ultimo.calidad+ultimo.tecnica+ultimo.resistencia)/4)}</td>
         <td><span class="fase-tag ${fase}">${fase.toUpperCase()}</span></td>
-        <td>${resumenCorto(p.evo)}</td>
+        <td>${primer.inicio}</td>
       </tr>
     `;
   });
@@ -242,28 +253,6 @@ function render() {
 
 window.onload = render;
 </script>
-
-</head>
-
-<body>
-
-<h2>📊 Dashboard PRO – Programa de Capacitación</h2>
-
-<table>
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>Casetero</th>
-      <th>Merma</th>
-      <th>Avance</th>
-      <th>Inventario</th>
-      <th>Score</th>
-      <th>Fase</th>
-      <th>Perfil / Evolución</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
-</table>
 
 </body>
 </html>
