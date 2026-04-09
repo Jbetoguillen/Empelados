@@ -7,7 +7,7 @@
 <style>
   body {
     font-family: 'Segoe UI', Arial;
-    background: #eef1f4;
+    background: linear-gradient(135deg, #eef1f4, #dfe6ec);
     margin: 0;
     padding: 30px;
   }
@@ -34,6 +34,7 @@
     color: white;
     padding: 12px;
     font-size: 14px;
+    letter-spacing: 0.5px;
   }
 
   td {
@@ -57,6 +58,8 @@
   }
 
   .rojo { background: #dc3545; }
+  .amarillo { background: #ffc107; color: #000; }
+  .verde { background: #28a745; }
 
   .fase-tag {
     padding: 5px 10px;
@@ -75,7 +78,7 @@
 
 <script>
 // ============================
-// DATOS
+// DATOS (pueden repetirse)
 // ============================
 const DATA = [
   { nombre:"Michel Adriana Castro", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2024-03-20" },
@@ -108,20 +111,16 @@ function agruparPorPersona() {
 }
 
 // ============================
-// DÍAS DESDE FECHA DE INICIO (SIN LÍMITES)
+// CALCULAR DÍAS EN PROGRAMA
 // ============================
-function diasDesdeInicio(fechaInicio) {
-  const inicio = new Date(fechaInicio);
-  const hoy = new Date(); // fecha real del navegador
-
-  let dias = Math.floor((hoy - inicio) / (1000*60*60*24));
-  if (dias < 0) dias = 0;
-
-  return dias;
+function diasEnPrograma(fechaInicio) {
+  const start = new Date(fechaInicio);
+  const hoy = new Date();
+  return Math.floor((hoy - start) / (1000*60*60*24));
 }
 
 // ============================
-// FASE SEGÚN PROTOCOLO
+// FASE SEGÚN PROTOCOLO AGROVAL
 // ============================
 function faseSegunProtocolo(dias) {
   if (dias <= 10) return "f1";     // Inducción
@@ -164,6 +163,7 @@ function resumenCorto(e) {
   if (e.calidad < 0) opciones.push({peso:1, txt:`🥚 Calidad empeora (${e.calidad}%)`});
   if (e.calidad > 0) opciones.push({peso:1, txt:`🥚 Calidad mejora (+${e.calidad}%)`});
 
+  // SI NO HAY MEJORA NI EMPEORAMIENTO → NEGATIVO
   if (opciones.length === 0) return "⚠ Rendimiento detenido";
 
   opciones.sort((a,b)=>b.peso - a.peso);
@@ -214,15 +214,15 @@ function render() {
     const primer = reportes[0];
     const ultimo = reportes[reportes.length - 1];
     const evo = evolucion(primer, ultimo);
-    const dias = diasDesdeInicio(primer.inicio);
+    const dias = diasEnPrograma(primer.inicio);
 
     return { nombre, primer, ultimo, evo, dias };
   });
 
-  // Ordenar de más días a menos días
   lista.sort((a,b)=> b.dias - a.dias);
 
   lista.forEach((p,i)=>{
+    const avance = Math.round((p.dias / 33) * 100);
     const fase = faseSegunProtocolo(p.dias);
 
     tbody.innerHTML += `
@@ -230,7 +230,7 @@ function render() {
         <td>${i+1}</td>
         <td><strong>${p.nombre}</strong></td>
         <td><span class="tag rojo">${p.ultimo.merma}%</span></td>
-        <td>${p.dias} días</td>
+        <td>${avance}%</td>
         <td>📦 ${p.ultimo.cajas}</td>
         <td>⭐ ${Math.round((p.ultimo.limpieza+p.ultimo.calidad+p.ultimo.tecnica+p.ultimo.resistencia)/4)}</td>
         <td><span class="fase-tag ${fase}">${fase.toUpperCase()}</span></td>
