@@ -114,11 +114,12 @@
 // DATOS 2026 (actualizados)
 // ============================
 const DATA = [
+
   // Michel Adriana Castro (base + actualizado)
   { nombre:"Michel Adriana Castro", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2026-03-20" },
   { nombre:"Michel Adriana Castro", merma:2, limpieza:75, calidad:90, resistencia:80, tecnica:80, cajas:40, inicio:"2026-04-01" },
 
-  // María de los Ángeles (BAJA, un solo registro)
+  // María de los Ángeles (BAJA)
   { nombre:"María de los Ángeles Castillo Contreras", merma:3, limpieza:70, calidad:90, resistencia:50, tecnica:70, cajas:28, inicio:"2026-03-31" },
 
   // Felipe de Jesús (base + actualizado)
@@ -141,76 +142,22 @@ const DATA = [
   { nombre:"Santos Heriberto Cornelio Tapia", merma:6, limpieza:60, calidad:70, resistencia:50, tecnica:65, cajas:25, inicio:"2026-04-01" },
 
   // Miguel Gustavo Jimenez Espinoza
-  {
-    nombre:"Miguel Gustavo Jimenez Espinoza",
-    merma:4,          // 4% mermas
-    limpieza:75,      // orden 75
-    calidad:80,       // calidad 80
-    resistencia:70,   // buena resistencia
-    tecnica:75,       // buen prospecto
-    cajas:28,         // 25-30 cajas
-    inicio:"2026-04-01"
-  },
+  { nombre:"Miguel Gustavo Jimenez Espinoza", merma:4, limpieza:75, calidad:80, resistencia:70, tecnica:75, cajas:28, inicio:"2026-04-01" },
 
   // Leydi Lizeth Parra Leyva (actualizada)
-  {
-    nombre:"Leydi Lizeth Parra Leyva",
-    merma:2,          // 2% mermas
-    limpieza:75,      // orden 75
-    calidad:90,       // calidad 90
-    resistencia:70,   // 6 horas con algo de dificultad
-    tecnica:75,       // en capacitación pero bien
-    cajas:22,         // 21-23 cajas
-    inicio:"2026-04-10"
-  },
+  { nombre:"Leydi Lizeth Parra Leyva", merma:2, limpieza:75, calidad:90, resistencia:70, tecnica:75, cajas:22, inicio:"2026-04-10" },
 
   // Jesús Abel Cervantes Medina (actualizado)
-  {
-    nombre:"Jesús Abel Cervantes Medina",
-    merma:2,          // 2% mermas
-    limpieza:80,      // orden 80
-    calidad:85,       // calidad 85
-    resistencia:80,   // 7 horas
-    tecnica:80,       // buen nivel
-    cajas:23,         // 22-24 cajas
-    inicio:"2026-04-10"
-  },
+  { nombre:"Jesús Abel Cervantes Medina", merma:2, limpieza:80, calidad:85, resistencia:80, tecnica:80, cajas:23, inicio:"2026-04-10" },
 
   // Agustín Armando Ayala Vasquez
-  {
-    nombre:"Agustín Armando Ayala Vasquez",
-    merma:6,          // 6% mermas
-    limpieza:60,      // orden 60
-    calidad:70,       // calidad 70
-    resistencia:60,   // 5 horas
-    tecnica:65,       // en capacitación
-    cajas:12,         // 10-13 cajas
-    inicio:"2026-04-15"
-  },
+  { nombre:"Agustín Armando Ayala Vasquez", merma:6, limpieza:60, calidad:70, resistencia:60, tecnica:65, cajas:12, inicio:"2026-04-15" },
 
   // Aurelia Teresa Ayala Vasquez
-  {
-    nombre:"Aurelia Teresa Ayala Vasquez",
-    merma:4,          // 4% mermas
-    limpieza:60,
-    calidad:80,
-    resistencia:55,   // 4 horas
-    tecnica:65,
-    cajas:7,          // 5-8 cajas
-    inicio:"2026-04-15"
-  },
+  { nombre:"Aurelia Teresa Ayala Vasquez", merma:4, limpieza:60, calidad:80, resistencia:55, tecnica:65, cajas:7, inicio:"2026-04-15" },
 
   // Adolfa Balvadea Vazquez
-  {
-    nombre:"Adolfa Balvadea Vazquez",
-    merma:10,         // 10% mermas
-    limpieza:60,
-    calidad:75,
-    resistencia:55,   // 4 horas
-    tecnica:60,       // mejorable
-    cajas:10,         // 8-12 cajas
-    inicio:"2026-04-15"
-  }
+  { nombre:"Adolfa Balvadea Vazquez", merma:10, limpieza:60, calidad:75, resistencia:55, tecnica:60, cajas:10, inicio:"2026-04-15" }
 ];
 
 // ============================
@@ -306,33 +253,84 @@ function mostrarGrafica(nombre, primer, ultimo) {
 }
 
 // ============================
-// RENDER
+// RENDER (ORDENADO + SEPARADO)
 // ============================
 function render() {
   const tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
 
   const personas = agruparPorPersona();
+  let activos = [];
+  let bajas = [];
 
-  Object.keys(personas).forEach((nombre, i) => {
+  Object.keys(personas).forEach(nombre => {
     const reportes = personas[nombre];
     const primer = reportes[0];
     const ultimo = reportes[reportes.length - 1];
-
     const dias = diasDesdeInicio(primer.inicio);
-    const fase = faseSegunProtocolo(dias);
-    const color = colorAvance(dias);
-    const coment = comentario(primer, ultimo, nombre);
 
+    const registro = {
+      nombre,
+      primer,
+      ultimo,
+      dias,
+      fase: faseSegunProtocolo(dias),
+      color: colorAvance(dias),
+      comentario: comentario(primer, ultimo, nombre)
+    };
+
+    if (registro.comentario === "BAJA") bajas.push(registro);
+    else activos.push(registro);
+  });
+
+  // ORDENAR ACTIVOS POR DÍAS (MAYOR → MENOR)
+  activos.sort((a, b) => b.dias - a.dias);
+
+  // ORDENAR BAJAS TAMBIÉN
+  bajas.sort((a, b) => b.dias - a.dias);
+
+  // ============================
+  // IMPRIMIR ACTIVOS
+  // ============================
+  tbody.innerHTML += `
+    <tr style="background:#d4edda;">
+      <td colspan="7"><strong>🟩 PERSONAL ACTIVO</strong></td>
+    </tr>
+  `;
+
+  activos.forEach((p, i) => {
     tbody.innerHTML += `
-      <tr onclick='mostrarGrafica("${nombre}", ${JSON.stringify(primer)}, ${JSON.stringify(ultimo)})'>
+      <tr onclick='mostrarGrafica("${p.nombre}", ${JSON.stringify(p.primer)}, ${JSON.stringify(p.ultimo)})'>
         <td>${i+1}</td>
-        <td><strong>${nombre}</strong></td>
-        <td><span class="avance ${color}">${dias} días</span></td>
-        <td>📦 ${ultimo.cajas}</td>
-        <td>⭐ ${Math.round((ultimo.limpieza+ultimo.calidad+ultimo.tecnica+ultimo.resistencia)/4)}</td>
-        <td><span class="fase-tag ${fase}">${fase.toUpperCase()}</span></td>
-        <td>${coment}</td>
+        <td><strong>${p.nombre}</strong></td>
+        <td><span class="avance ${p.color}">${p.dias} días</span></td>
+        <td>📦 ${p.ultimo.cajas}</td>
+        <td>⭐ ${Math.round((p.ultimo.limpieza+p.ultimo.calidad+p.ultimo.tecnica+p.ultimo.resistencia)/4)}</td>
+        <td><span class="fase-tag ${p.fase}">${p.fase.toUpperCase()}</span></td>
+        <td>${p.comentario}</td>
+      </tr>
+    `;
+  });
+
+  // ============================
+  // IMPRIMIR BAJA
+  // ============================
+  tbody.innerHTML += `
+    <tr style="background:#f8d7da;">
+      <td colspan="7"><strong>🟥 PERSONAL DE BAJA</strong></td>
+    </tr>
+  `;
+
+  bajas.forEach((p, i) => {
+    tbody.innerHTML += `
+      <tr style="opacity:0.6;">
+        <td>${i+1}</td>
+        <td><strong>${p.nombre}</strong></td>
+        <td><span class="avance rojo">${p.dias} días</span></td>
+        <td>📦 ${p.ultimo.cajas}</td>
+        <td>⭐ ${Math.round((p.ultimo.limpieza+p.ultimo.calidad+p.ultimo.tecnica+p.ultimo.resistencia)/4)}</td>
+        <td><span class="fase-tag f1">F1</span></td>
+        <td>BAJA</td>
       </tr>
     `;
   });
