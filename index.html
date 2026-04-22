@@ -4,8 +4,6 @@
 <meta charset="UTF-8">
 <title>Dashboard PRO – Capacitación AGROVAL</title>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
   body {
     font-family: 'Segoe UI', Arial;
@@ -14,10 +12,8 @@
     padding: 30px;
   }
 
-  h2 {
+  h2, h3 {
     color: #1f2d3d;
-    margin-bottom: 25px;
-    font-size: 28px;
     font-weight: 700;
     text-align: center;
   }
@@ -29,6 +25,7 @@
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 4px 18px rgba(0,0,0,0.1);
+    margin-bottom: 40px;
   }
 
   thead th {
@@ -47,7 +44,6 @@
 
   tr:hover {
     background: #f1f7ff;
-    cursor: pointer;
   }
 
   .avance {
@@ -73,13 +69,27 @@
   .f2 { background: #ffc107; color: #000; }
   .f3 { background: #28a745; }
 
-  #graficaBox {
-    margin-top: 40px;
+  .foda-box {
     background: white;
-    padding: 25px;
+    padding: 20px;
     border-radius: 14px;
+    margin-bottom: 25px;
     box-shadow: 0 4px 18px rgba(0,0,0,0.1);
-    display: none;
+  }
+
+  .foda-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #1f2d3d;
+  }
+
+  .foda-section {
+    margin-bottom: 8px;
+  }
+
+  .foda-section strong {
+    color: #1f2d3d;
   }
 </style>
 
@@ -104,10 +114,8 @@
   <tbody id="tbody"></tbody>
 </table>
 
-<div id="graficaBox">
-  <h3 id="tituloGrafica"></h3>
-  <canvas id="grafica"></canvas>
-</div>
+<h2>📝 ANÁLISIS FODA – TODOS LOS CASETEROS</h2>
+<div id="fodaContainer"></div>
 
 <script>
 // ============================
@@ -129,10 +137,6 @@ const DATA = [
   // Blanca Yaneli (base + actualizada)
   { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:75, calidad:90, resistencia:60, tecnica:75, cajas:30, inicio:"2026-04-03" },
   { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:70, calidad:90, resistencia:70, tecnica:75, cajas:37, inicio:"2026-04-03" },
-
-  // César Braulio (base + actualizado)
-  { nombre:"Cesar Braulio Pereida Monroy", merma:5, limpieza:60, calidad:70, resistencia:60, tecnica:70, cajas:29, inicio:"2026-04-04" },
-  { nombre:"Cesar Braulio Pereida Monroy", merma:3, limpieza:75, calidad:90, resistencia:80, tecnica:75, cajas:33, inicio:"2026-04-04" },
 
   // José Ángel (dos reportes)
   { nombre:"José Ángel González García", merma:6, limpieza:50, calidad:70, resistencia:30, tecnica:55, cajas:15, inicio:"2026-03-28" },
@@ -157,7 +161,16 @@ const DATA = [
   { nombre:"Aurelia Teresa Ayala Vasquez", merma:4, limpieza:60, calidad:80, resistencia:55, tecnica:65, cajas:7, inicio:"2026-04-15" },
 
   // Adolfa Balvadea Vazquez
-  { nombre:"Adolfa Balvadea Vazquez", merma:10, limpieza:60, calidad:75, resistencia:55, tecnica:60, cajas:10, inicio:"2026-04-15" }
+  { nombre:"Adolfa Balvadea Vazquez", merma:10, limpieza:60, calidad:75, resistencia:55, tecnica:60, cajas:10, inicio:"2026-04-15" },
+
+  // Placencia Hernández José Miguel (BAJA)
+  { nombre:"Placencia Hernández José Miguel", merma:5, limpieza:70, calidad:85, resistencia:50, tecnica:70, cajas:0, inicio:"2026-04-13" },
+
+  // Santiago Dessens Luis Enrique (BAJA)
+  { nombre:"Santiago Dessens Luis Enrique", merma:10, limpieza:50, calidad:60, resistencia:40, tecnica:50, cajas:0, inicio:"2026-03-13" },
+
+  // César Braulio Pereida Monroy (BAJA desde hace 5 días)
+  { nombre:"Cesar Braulio Pereida Monroy", merma:3, limpieza:75, calidad:90, resistencia:80, tecnica:75, cajas:33, inicio:"2026-04-17" }
 ];
 
 // ============================
@@ -205,7 +218,12 @@ function colorAvance(dias) {
 // ============================
 function comentario(primer, ultimo, nombre) {
 
-  if (nombre.includes("María de los Ángeles")) return "BAJA";
+  if (
+    nombre.includes("María de los Ángeles") ||
+    nombre.includes("Placencia Hernández") ||
+    nombre.includes("Santiago Dessens") ||
+    nombre.includes("Cesar Braulio")
+  ) return "BAJA";
 
   let mejoras = 0;
   let empeoras = 0;
@@ -222,34 +240,104 @@ function comentario(primer, ultimo, nombre) {
 }
 
 // ============================
-// GRÁFICA
+// FODA AUTOMÁTICO
 // ============================
-let chart;
+function generarFODA(nombre) {
 
-function mostrarGrafica(nombre, primer, ultimo) {
-
-  if (nombre.includes("María de los Ángeles")) return;
-
-  document.getElementById("graficaBox").style.display = "block";
-  document.getElementById("tituloGrafica").innerText = "Evolución de " + nombre;
-
-  const labels = ["Limpieza", "Calidad", "Técnica", "Resistencia", "Merma"];
-  const primerData = [primer.limpieza, primer.calidad, primer.tecnica, primer.resistencia, primer.merma];
-  const ultimoData = [ultimo.limpieza, ultimo.calidad, ultimo.tecnica, ultimo.resistencia, ultimo.merma];
-
-  if (chart) chart.destroy();
-
-  chart = new Chart(document.getElementById("grafica"), {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        { label: "Primer reporte", backgroundColor: "#1f77b4", data: primerData },
-        { label: "Último reporte", backgroundColor: "#ff7f0e", data: ultimoData }
-      ]
+  const foda = {
+    "Miguel Gustavo Jimenez Espinoza": {
+      F:"Buena calidad, técnica sólida, resistencia adecuada.",
+      O:"Mejorar limpieza y consistencia.",
+      D:"Mermas algo altas.",
+      A:"Riesgo de estancamiento."
     },
-    options: { responsive: true, scales: { y: { beginAtZero: true } } }
-  });
+    "Leydi Lizeth Parra Leyva": {
+      F:"Alta calidad, inventarios fuertes.",
+      O:"Mejorar resistencia.",
+      D:"Dificultad con carga pesada.",
+      A:"Riesgo de fatiga."
+    },
+    "Jesús Abel Cervantes Medina": {
+      F:"Excelente calidad y resistencia.",
+      O:"Mejorar rendimiento.",
+      D:"Ritmo operativo no óptimo.",
+      A:"Puede quedarse corto en productividad."
+    },
+    "Agustín Armando Ayala Vasquez": {
+      F:"Buena actitud.",
+      O:"Mejorar inventarios.",
+      D:"Producción baja.",
+      A:"Riesgo de no alcanzar nivel requerido."
+    },
+    "Aurelia Teresa Ayala Vasquez": {
+      F:"Buena calidad.",
+      O:"Mejorar resistencia.",
+      D:"Solo 4 horas de resistencia.",
+      A:"Riesgo de no sostener jornada."
+    },
+    "Adolfa Balvadea Vazquez": {
+      F:"Calidad aceptable.",
+      O:"Mejorar técnica.",
+      D:"Mermas altas.",
+      A:"Riesgo de no completar capacitación."
+    },
+    "Blanca Yaneli Vega Gutierrez": {
+      F:"Inventarios muy altos, calidad excelente.",
+      O:"Mejorar orden.",
+      D:"Falta material para práctica.",
+      A:"Factores externos frenan avance."
+    },
+    "Felipe de Jesús Castillo Escalante": {
+      F:"Excelente condición física.",
+      O:"Mejorar rendimiento.",
+      D:"Retraso por apoyar en otras áreas.",
+      A:"Desvío de funciones afecta avance."
+    },
+    "Michel Adriana Castro": {
+      F:"Buena calidad y técnica.",
+      O:"Mejorar constancia.",
+      D:"Inconsistencia en inventarios.",
+      A:"Riesgo de no consolidar productividad."
+    },
+    "José Ángel González García": {
+      F:"Mejora progresiva.",
+      O:"Aumentar resistencia.",
+      D:"Resistencia baja.",
+      A:"Riesgo de estancamiento."
+    },
+    "Santos Heriberto Cornelio Tapia": {
+      F:"Técnica aceptable.",
+      O:"Mejorar limpieza.",
+      D:"Inventarios bajos.",
+      A:"Curva de aprendizaje lenta."
+    },
+    "María de los Ángeles Castillo Contreras": {
+      F:"Buena calidad.",
+      O:"Pudo tener buen desempeño.",
+      D:"No completó capacitación.",
+      A:"Salida definitiva."
+    },
+    "Placencia Hernández José Miguel": {
+      F:"Buena calidad inicial.",
+      O:"Mejorar asistencia.",
+      D:"Problemas de transporte.",
+      A:"Inestabilidad laboral."
+    },
+    "Santiago Dessens Luis Enrique": {
+      F:"Disponibilidad inicial.",
+      O:"Pudo desarrollarse.",
+      D:"Duró solo 2 días.",
+      A:"Abandono temprano."
+    },
+    "Cesar Braulio Pereida Monroy": {
+      F:"Buena calidad y resistencia.",
+      O:"Podría reincorporarse si mejora disciplina.",
+      D:"Varias faltas y baja reciente.",
+      A:"Inestabilidad laboral."
+    }
+  };
+
+  return foda[nombre];
 }
 
 // ============================
@@ -257,7 +345,10 @@ function mostrarGrafica(nombre, primer, ultimo) {
 // ============================
 function render() {
   const tbody = document.getElementById("tbody");
+  const fodaContainer = document.getElementById("fodaContainer");
+
   tbody.innerHTML = "";
+  fodaContainer.innerHTML = "";
 
   const personas = agruparPorPersona();
   let activos = [];
@@ -283,15 +374,9 @@ function render() {
     else activos.push(registro);
   });
 
-  // ORDENAR ACTIVOS POR DÍAS (MAYOR → MENOR)
   activos.sort((a, b) => b.dias - a.dias);
-
-  // ORDENAR BAJAS TAMBIÉN
   bajas.sort((a, b) => b.dias - a.dias);
 
-  // ============================
-  // IMPRIMIR ACTIVOS
-  // ============================
   tbody.innerHTML += `
     <tr style="background:#d4edda;">
       <td colspan="7"><strong>🟩 PERSONAL ACTIVO</strong></td>
@@ -300,7 +385,7 @@ function render() {
 
   activos.forEach((p, i) => {
     tbody.innerHTML += `
-      <tr onclick='mostrarGrafica("${p.nombre}", ${JSON.stringify(p.primer)}, ${JSON.stringify(p.ultimo)})'>
+      <tr>
         <td>${i+1}</td>
         <td><strong>${p.nombre}</strong></td>
         <td><span class="avance ${p.color}">${p.dias} días</span></td>
@@ -310,11 +395,20 @@ function render() {
         <td>${p.comentario}</td>
       </tr>
     `;
+
+    const f = generarFODA(p.nombre);
+
+    fodaContainer.innerHTML += `
+      <div class="foda-box">
+        <div class="foda-title">${p.nombre}</div>
+        <div class="foda-section"><strong>Fortalezas:</strong> ${f.F}</div>
+        <div class="foda-section"><strong>Oportunidades:</strong> ${f.O}</div>
+        <div class="foda-section"><strong>Debilidades:</strong> ${f.D}</div>
+        <div class="foda-section"><strong>Amenazas:</strong> ${f.A}</div>
+      </div>
+    `;
   });
 
-  // ============================
-  // IMPRIMIR BAJA
-  // ============================
   tbody.innerHTML += `
     <tr style="background:#f8d7da;">
       <td colspan="7"><strong>🟥 PERSONAL DE BAJA</strong></td>
@@ -333,11 +427,10 @@ function render() {
         <td>BAJA</td>
       </tr>
     `;
-  });
-}
 
-window.onload = render;
-</script>
+    const f = generarFODA(p.nombre);
 
-</body>
-</html>
+    fodaContainer.innerHTML += `
+      <div class="foda-box">
+        <div class="foda-title">${p.nombre} (BAJA)</div>
+        <div class="foda-section"><strong>Fortalezas:</strong> ${f.F}</div
