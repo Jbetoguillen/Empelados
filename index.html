@@ -111,62 +111,105 @@
 
 <script>
 // ============================
-// DATOS 2026 (incluye Miguel, Leydi y Jesús Abel)
+// DATOS 2026 (actualizados)
 // ============================
 const DATA = [
-  // Caseteros originales
+  // Michel Adriana Castro (base + actualizado)
   { nombre:"Michel Adriana Castro", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2026-03-20" },
-  { nombre:"Michel Adriana Castro", merma:2, limpieza:70, calidad:90, resistencia:60, tecnica:75, cajas:34, inicio:"2026-03-31" },
+  { nombre:"Michel Adriana Castro", merma:2, limpieza:75, calidad:90, resistencia:80, tecnica:80, cajas:40, inicio:"2026-04-01" },
 
+  // María de los Ángeles (BAJA, un solo registro)
   { nombre:"María de los Ángeles Castillo Contreras", merma:3, limpieza:70, calidad:90, resistencia:50, tecnica:70, cajas:28, inicio:"2026-03-31" },
 
+  // Felipe de Jesús (base + actualizado)
   { nombre:"Felipe de Jesús Castillo Escalante", merma:4, limpieza:85, calidad:80, resistencia:50, tecnica:65, cajas:35, inicio:"2026-03-31" },
+  { nombre:"Felipe de Jesús Castillo Escalante", merma:2, limpieza:85, calidad:90, resistencia:80, tecnica:80, cajas:39, inicio:"2026-04-01" },
 
+  // Blanca Yaneli (base + actualizada)
   { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:75, calidad:90, resistencia:60, tecnica:75, cajas:30, inicio:"2026-04-03" },
+  { nombre:"Blanca Yaneli Vega Gutierrez", merma:2, limpieza:70, calidad:90, resistencia:70, tecnica:75, cajas:37, inicio:"2026-04-03" },
 
+  // César Braulio (base + actualizado)
   { nombre:"Cesar Braulio Pereida Monroy", merma:5, limpieza:60, calidad:70, resistencia:60, tecnica:70, cajas:29, inicio:"2026-04-04" },
+  { nombre:"Cesar Braulio Pereida Monroy", merma:3, limpieza:75, calidad:90, resistencia:80, tecnica:75, cajas:33, inicio:"2026-04-04" },
 
+  // José Ángel (dos reportes)
   { nombre:"José Ángel González García", merma:6, limpieza:50, calidad:70, resistencia:30, tecnica:55, cajas:15, inicio:"2026-03-28" },
   { nombre:"José Ángel González García", merma:4, limpieza:60, calidad:80, resistencia:40, tecnica:65, cajas:20, inicio:"2026-04-01" },
 
+  // Santos Heriberto (un reporte)
   { nombre:"Santos Heriberto Cornelio Tapia", merma:6, limpieza:60, calidad:70, resistencia:50, tecnica:65, cajas:25, inicio:"2026-04-01" },
-
-  // Nuevos expedientes integrados
 
   // Miguel Gustavo Jimenez Espinoza
   {
     nombre:"Miguel Gustavo Jimenez Espinoza",
-    merma:4,                 // mermas observadas 4%
-    limpieza:75,             // orden y limpieza 75%
-    calidad:80,              // calidad 80%
-    resistencia:70,          // buena resistencia (5 horas constante)
-    tecnica:75,              // habilidades técnicas aceptables/buen prospecto
-    cajas:28,                // 25-30 cajas promedio
-    inicio:"2026-04-01"      // fecha inicial de capacitación
+    merma:4,          // 4% mermas
+    limpieza:75,      // orden 75
+    calidad:80,       // calidad 80
+    resistencia:70,   // buena resistencia
+    tecnica:75,       // buen prospecto
+    cajas:28,         // 25-30 cajas
+    inicio:"2026-04-01"
   },
 
-  // Leydi Lizeth Parra Leyva
+  // Leydi Lizeth Parra Leyva (actualizada)
   {
     nombre:"Leydi Lizeth Parra Leyva",
-    merma:3,                 // mermas 3%
-    limpieza:70,             // orden y limpieza 70%
-    calidad:85,              // calidad 85%
-    resistencia:65,          // 6 horas con algo de inseguridad
-    tecnica:70,              // técnica aceptable, en capacitación
-    cajas:21,                // 19-22 cajas promedio
-    inicio:"2026-04-10"      // fecha inicial de capacitación
+    merma:2,          // 2% mermas
+    limpieza:75,      // orden 75
+    calidad:90,       // calidad 90
+    resistencia:70,   // 6 horas con algo de dificultad
+    tecnica:75,       // en capacitación pero bien
+    cajas:22,         // 21-23 cajas
+    inicio:"2026-04-10"
   },
 
-  // Jesús Abel Cervantes Medina
+  // Jesús Abel Cervantes Medina (actualizado)
   {
     nombre:"Jesús Abel Cervantes Medina",
-    merma:3,                 // mermas 3%
-    limpieza:75,             // orden y limpieza 75%
-    calidad:80,              // calidad 80%
-    resistencia:70,          // 6 horas, buena condición
-    tecnica:70,              // técnica aceptable
-    cajas:23,                // 21-24 cajas promedio
-    inicio:"2026-04-10"      // fecha inicial de capacitación
+    merma:2,          // 2% mermas
+    limpieza:80,      // orden 80
+    calidad:85,       // calidad 85
+    resistencia:80,   // 7 horas
+    tecnica:80,       // buen nivel
+    cajas:23,         // 22-24 cajas
+    inicio:"2026-04-10"
+  },
+
+  // Agustín Armando Ayala Vasquez
+  {
+    nombre:"Agustín Armando Ayala Vasquez",
+    merma:6,          // 6% mermas
+    limpieza:60,      // orden 60
+    calidad:70,       // calidad 70
+    resistencia:60,   // 5 horas
+    tecnica:65,       // en capacitación
+    cajas:12,         // 10-13 cajas
+    inicio:"2026-04-15"
+  },
+
+  // Aurelia Teresa Ayala Vasquez
+  {
+    nombre:"Aurelia Teresa Ayala Vasquez",
+    merma:4,          // 4% mermas
+    limpieza:60,
+    calidad:80,
+    resistencia:55,   // 4 horas
+    tecnica:65,
+    cajas:7,          // 5-8 cajas
+    inicio:"2026-04-15"
+  },
+
+  // Adolfa Balvadea Vazquez
+  {
+    nombre:"Adolfa Balvadea Vazquez",
+    merma:10,         // 10% mermas
+    limpieza:60,
+    calidad:75,
+    resistencia:55,   // 4 horas
+    tecnica:60,       // mejorable
+    cajas:10,         // 8-12 cajas
+    inicio:"2026-04-15"
   }
 ];
 
